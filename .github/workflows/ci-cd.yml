@@ -1,46 +1,41 @@
 name: Python CI Pipeline
 
-# 1. Trigger: Run this pipeline on pushes and pull requests to the main branch
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
-# 2. Jobs: The actual steps the server will execute
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Copy the Python project files onto the GitHub cloud server
+      # Step 1: Clone repository
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up the specific Python version you need
+      # Step 2: Set up Python runtime
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip' # Automatically caches downloaded packages to speed up future runs
+          cache: 'pip'
 
-      # Step 3: Upgrade pip and install all required libraries
+      # Step 3: Crucial Package Installation Block (Check this carefully!)
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install flake8 pytest # Installs the standard linting and testing tools
+          pip install flake8 pytest
 
-      # Step 4: Linting (Optional but highly recommended)
-      # This stops the build if there are critical syntax errors or major formatting issues
+      # Step 4: Code Linter (Already verified working!)
       - name: Lint Code with Flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all other formatting warnings as advice rather than failures
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # Step 5: Run your automated Python tests
+      # Step 5: Run tests (Fails if Step 3 didn't run)
       - name: Run Tests with Pytest
         run: |
           pytest
